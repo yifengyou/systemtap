@@ -1,0 +1,20 @@
+#!/usr/bin/env stap
+global proc_time, last_time
+probe begin {
+  last_time = gettimeofday_us()
+}
+probe timer.s(5) {
+  now = gettimeofday_us()
+  elapsed = now - last_time
+  last_time = now
+  printf("%-6s %-16s %6s\n", "PID", "COMM", "%CPU")
+  foreach ([pid, comm] in proc_time- limit 10) {
+    printf("%-6d %-16s %6.2f\n", pid, comm, 1000*proc_time[pid, comm]/elapsed)
+    delete proc_time[pid, comm]
+  }
+  print("\n")
+}
+probe process("*").scheduler {
+  proc_time[pid(), execname()] += (gettimeofday_us() - @entry(gettimeofday_us()))
+}
+

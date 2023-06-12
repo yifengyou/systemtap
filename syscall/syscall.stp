@@ -1,0 +1,14 @@
+#!/usr/bin/env stap
+global syscalls
+probe syscall.* {
+  syscalls[name] <<< (gettimeofday_us() - @entry(gettimeofday_us()))
+}
+probe timer.s(5) {
+  printf("%-20s %10s %10s\n", "syscall", "count", "usec")
+  foreach ([name] in syscalls- limit 10) {
+    printf("%-20s %10d %10d\n", name, @count(syscalls[name]), @sum(syscalls[name]))
+  }
+  delete syscalls
+  print("\n")
+}
+

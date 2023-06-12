@@ -1,0 +1,3 @@
+#! /usr/bin/env stap
+#
+probe oneshot { println("hello world") }

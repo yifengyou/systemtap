@@ -1,0 +1,22 @@
+#!/usr/bin/env stap
+
+global states = ("ESTABLISHED", "SYN_SENT", "SYN_RECV", "FIN_WAIT1",
+		 "FIN_WAIT2", "TIME_WAIT", "CLOSE", "CLOSE_WAIT",
+		 "LAST_ACK", "LISTEN", "CLOSING")
+
+function addrstr(addr) {
+  return sprintf("%d.%d.%d.%d:%d",
+                 addr[0], addr[1], addr[2], addr[3], ntohs(addr[4]))
+}
+
+probe kernel.function("tcp_set_state") {
+  old_state = states[$state]
+  new_state = states[$newstate]
+  if (old_state != new_state) {
+    printf("%s -> %s: %s -> %s\n",
+           old_state, new_state,
+           addrstr($sk->sk__skc_v4_rcv_saddr),
+           addrstr($sk->sk__skc_v4_daddr))
+  }
+}
+
