@@ -1,0 +1,18 @@
+#!/usr/bin/env stap
+// 定义一个全局变量count
+global count
+
+// 定义一个探针，在每次上下文切换时执行
+probe scheduler.ctxswitch {
+  // 将count加一
+  count++
+}
+
+// 定义一个探针，在每秒钟结束时执行
+probe timer.s(1) {
+  // 打印count的值
+  printf("%d context switches per second\n", count)
+  // 将count重置为零
+  count = 0
+}
+
